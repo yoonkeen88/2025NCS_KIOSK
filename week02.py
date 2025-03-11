@@ -4,13 +4,18 @@
 ame = 2600
 latte = 3300
 choco = 3600
-order = int(input("주문하세요(Ice americano: 1, Ice Latte: 2, Ice choco: 3600): "))
+while True:
+    order = int(input("주문하세요(Ice americano: 1, Ice Latte: 2, Ice choco: 3600, Exit: 4): "))
 
-if order == 1:
-    print(f"{ame}원 입니다.")
-elif order == 2:
-    print(f"{latte}원 입니다.")
-elif order == 3:
-    print(f"{choco}원 입니다.")
-else:
-    print("메뉴에 없습니다.")
+    if order == 1:
+        print(f"{ame}원 입니다.")
+    elif order == 2:
+        print(f"{latte}원 입니다.")
+    elif order == 3:
+        print(f"{choco}원 입니다.")
+    elif order == 4:
+        print(f"서비스를 종료합니다.")
+        break
+    else:
+        print("메뉴에 없습니다.")
+    
