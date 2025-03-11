@@ -14,7 +14,11 @@ build/
 *.pdb
 *.egg
 *.egg-info/
-dist/
-build/
+
 *.log
 *.cache
+
+# 가상환경 폴더
+KIOSK/
+
+.gitignore 
