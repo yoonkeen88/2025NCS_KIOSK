@@ -6,6 +6,16 @@ menu = ["Ice Americano", "Ice Latte", "Ice Choco"]
 amount = [0] * len(price)
 total = 0
 
+# 주문 처리 함수
+def orderProcess(idx:int):
+    global amount
+    amount[idx] += 1
+    global total
+    total += price[idx]
+    print(f"{menu[idx]}: {price[idx]}won")
+    print(f"Total: {total}won")
+    print("-----------------------------------------------")
+
 #  메뉴 처리 부분
 menuLists = ""
 for k in range(len(menu)):
@@ -15,36 +25,20 @@ menuLists += f" Exit: {len(price)+1} \nEnter the menu number: "
 # 프로그램 실행 루프 부분
 while True:
     order = int(input(menuLists))
-
-    if order == 1:
-        total += price[0]
-        amount[0] +=1
-        print(f"Selected menu {price[0]}won.\nCumulated price:{total}won.")
-
-    elif order == 2:
-        total += price[1]
-        amount[1] +=1
-
-        print(f"Selected menu {price[1]}won.\nCumulated price:{total}won.")
-        
-    elif order == 3:
-        total += price[2]
-        amount[2] +=1
-        print(f"Selected menu {price[2]}won.\nCumulated price:{total}won.")
-        
-    elif order == 4:
-        print(f"Exit.\nCumulated price: {total}won.")
-        
+    if order == len(price)+1:
         break
-    else:
+    elif order > len(menu):
         print("There no exist. \nPlz choose again.")
-
-print("Product name | Amount | Subtotal")
-print("-------------------------------")
+    else: 
+       orderProcess(order-1)
+    
+# 주문 통계 출력
+print("Product name\t|\tAmount\t|\tSubtotal")
+print("-----------------------------------------------")
 for i in range(len(price)):
     if amount[i] != 0:
-        print(f"{menu[i]} | {amount[i]} | {amount[i] * price[i]}")
-print(f"Total : {total}원")
+        print(f"{menu[i]}\t|\t{amount[i]}\t|\t{amount[i] * price[i]}")
+print(f"Total\t:\t{total}won")
     
 
     
