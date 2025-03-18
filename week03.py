@@ -32,6 +32,12 @@ while True:
     else:
         print("메뉴에 없습니다. \nPlz choose again.")
 
-print(f"주문 통계: \n아메리카노: \t{amount[0]} 잔, \n라떼: \t\t{amount[1]} 잔, \n초코: \t\t{amount[2]} 잔")
+print("Product name | Amount | Subtotal")
+print("-------------------------------")
+for i in range(len(price)):
+    if amount[i] != 0:
+        print(f"{menu[i]} | {amount[i]} | {amount[i] * price[i]}")
 print(f"총 매출: {total}원")
+    
+
     
