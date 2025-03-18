@@ -8,6 +8,14 @@ total = 0
 
 # 주문 처리 함수
 def orderProcess(idx:int):
+    """
+    documentation
+    calculate the current order and print the cumulative price and amount
+    
+    param idx: index of menu
+    return: None
+    print: menu name, price, total price
+    """
     global amount
     amount[idx] += 1
     global total
@@ -17,10 +25,12 @@ def orderProcess(idx:int):
     print("-----------------------------------------------")
 
 #  메뉴 처리 부분
-menuLists = ""
-for k in range(len(menu)):
-    menuLists += f"{menu[k]} | {price[k]}won: {k+1}, "
-menuLists += f" Exit: {len(price)+1} \nEnter the menu number: "
+# menuLists = ""
+# for k in range(len(menu)):
+#     menuLists += f"{menu[k]} | {price[k]}won: {k+1}, "
+# menuLists += f" Exit: {len(price)+1} \nEnter the menu number: "
+menuLists = " | ".join([f"({k+1}) {menu[k]}: {price[k]} won" for k in range(len(menu))]) + f"\n({len(price)+1}) Exit\nEnter the menu number: "
+
 
 # 프로그램 실행 루프 부분
 while True:
@@ -42,3 +52,5 @@ print(f"Total\t:\t{total}won")
     
 
     
+
+help(orderProcess)
