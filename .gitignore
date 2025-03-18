@@ -22,3 +22,8 @@ build/
 KIOSK/
 
 .gitignore 
+
+temp.py
+.env
+
+
