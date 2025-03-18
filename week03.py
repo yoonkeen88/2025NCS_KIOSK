@@ -5,39 +5,46 @@ price = [2600, 3300, 3600]
 menu = ["Ice Americano", "Ice Latte", "Ice Choco"]   
 amount = [0] * len(price)
 total = 0
-# orderList = [0,0,0]
+
+#  메뉴 처리 부분
+menuLists = ""
+for k in range(len(menu)):
+    menuLists += f"{menu[k]} | {price[k]}won: {k+1}, "
+menuLists += f" Exit: {len(price)+1} \nEnter the menu number: "
+
+# 프로그램 실행 루프 부분
 while True:
-    order = int(input(f"주문하세요({menu[0]} {price[0]}원: 1, {menu[1]} {price[1]}원: 2, {menu[2]} {price[2]}원: 3, Exit: 4): "))
+    order = int(input(menuLists))
 
     if order == 1:
         total += price[0]
         amount[0] +=1
-        print(f"{price[0]}원 입니다.\n누적 금액{total}원 입니다.")
+        print(f"Selected menu {price[0]}won.\nCumulated price:{total}won.")
 
     elif order == 2:
         total += price[1]
         amount[1] +=1
 
-        print(f"{price[1]}원 입니다.\n누적 금액{total}원 입니다.")
+        print(f"Selected menu {price[1]}won.\nCumulated price:{total}won.")
         
     elif order == 3:
         total += price[2]
         amount[2] +=1
-        print(f"선택하신 메뉴 {price[2]}원 입니다.\n누적 금액{total}원 입니다.")
+        print(f"Selected menu {price[2]}won.\nCumulated price:{total}won.")
         
     elif order == 4:
-        print(f"서비스를 종료합니다.\n누적 금액{total}원 입니다.")
+        print(f"Exit.\nCumulated price: {total}won.")
         
         break
     else:
-        print("메뉴에 없습니다. \nPlz choose again.")
+        print("There no exist. \nPlz choose again.")
 
 print("Product name | Amount | Subtotal")
 print("-------------------------------")
 for i in range(len(price)):
     if amount[i] != 0:
         print(f"{menu[i]} | {amount[i]} | {amount[i] * price[i]}")
-print(f"총 매출: {total}원")
+print(f"Total : {total}원")
     
 
     
