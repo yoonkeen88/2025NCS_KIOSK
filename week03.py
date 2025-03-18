@@ -3,10 +3,7 @@
 # 3) 주문한 음료의 가격을 출력한다.
 price = [2600, 3300, 3600]
 menu = ["Ice Americano", "Ice Latte", "Ice Choco"]   
-# amount = [0] * len(price)
-amount = [0]
-for _ in range( len(menu)):
-    amount.append(0)
+amount = [0] * len(price)
 total = 0
 
 # 주문 처리 함수
