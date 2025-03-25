@@ -1,10 +1,24 @@
 # 1) Ice amricano 2600, Ice latte 3300, Ice choco 3600
 # 2) 아메리카노, 라떼, 초코 중 하나를 입력받는다.
 # 3) 주문한 음료의 가격을 출력한다.
-price = [2600, 3300, 3600]
-menu = ["Ice Americano", "Ice Latte", "Ice Choco"]   
-amount = [0] * len(price)
-total = 0
+
+DISCOUNT_RATE = 0.9
+DISCOUNT_THRESHOLD = 10000
+def apply_discount(total):
+    """
+    documentation
+    A function calculate the price after discount
+    if total price is over 10000, 10% discount
+    if total price is over 5000, 5% discount
+    else, no discount
+
+    pram total: total price
+    return: discounted price
+    """
+    if total >= DISCOUNT_THRESHOLD:
+        return total * DISCOUNT_RATE
+    else:
+        return total
 
 # 주문 처리 함수
 def orderProcess(idx:int):
@@ -29,6 +43,10 @@ def orderProcess(idx:int):
 # for k in range(len(menu)):
 #     menuLists += f"{menu[k]} | {price[k]}won: {k+1}, "
 # menuLists += f" Exit: {len(price)+1} \nEnter the menu number: "
+price = [2600, 3300, 3600]
+menu = ["Ice Americano", "Ice Latte", "Ice Choco"]   
+amount = [0] * len(price)
+total = 0
 menuLists = " | ".join([f"({k+1}) {menu[k]}: {price[k]} won" for k in range(len(menu))]) + f"\n({len(price)+1}) Exit\nEnter the menu number: "
 
 
@@ -38,11 +56,11 @@ while True:
         order = int(input(menuLists))
         if order == len(price)+1:
             break
-        elif order >len(menu):
+        elif order > len(menu):
             print("There no exist. \nPlz choose again.")
         else: 
             orderProcess(order-1)
-    except ValueError as err: # 문자열 포멧으로 출력할 수 있음.add()
+    except ValueError as err: # 문자열 포멧으로 출력할 수 있음.
         print(f"Plz input valid values - only number.")
         continue
     
@@ -52,9 +70,14 @@ print("-----------------------------------------------")
 for i in range(len(price)):
     if amount[i] != 0:
         print(f"{menu[i]}\t|\t{amount[i]}\t|\t{amount[i] * price[i]}")
-print(f"Total\t:\t{total}won")
+print(f"Total price {total} won")
+
+if apply_discount(total) == total:
+    print("No discount")
+else: 
+    print(f"You ordered more than 10,000 won.\nDiscounted Total\t:\t{apply_discount(total)} won.\nYou saved {total - apply_discount(total)} won")
     
 
     
 
-help(orderProcess)
+# help(orderProcess)
