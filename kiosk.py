@@ -77,7 +77,24 @@ class OrderSystem:
         logging.info(f"{item} ordered. Total so far: {self.total} won")
         print(f"{item} ordered.")
         print(f"Total: {self.total} won\n{'-' * 50}")
+    
+    def get_Queue_number(self) -> int:
+        """Returns the current queue number."""
+        try:
+            with open("queue_number.txt", "r") as file:
+                queue_number = int(file.read().strip())
+        except (FileNotFoundError, ValueError):
+            queue_number = 0  # 파일이 없거나 비어 있으면 0부터 시작
 
+        queue_number += 1  # 실제 증가
+
+        with open("queue_number.txt", "w") as file:
+            file.write(str(queue_number))
+
+        print(f"\n✨ Your Queue Number is: {queue_number} ✨\nPlease wait while we prepare your order.")
+        return queue_number
+
+    
     def show_summary(self) -> None:
         """Displays the final order summary, including discounts."""
         print("\n{:<20} | {:^6} | {:>10}".format("Product Name", "Amount", "Subtotal"))
@@ -115,4 +132,5 @@ class OrderSystem:
             except ValueError:
                 print("Invalid input. Please enter a number.")
         self.show_summary()
+        self.get_Queue_number()
 

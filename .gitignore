@@ -26,4 +26,5 @@ KIOSK/
 temp.py
 .env
 
-
+*.txt
+*.csv
