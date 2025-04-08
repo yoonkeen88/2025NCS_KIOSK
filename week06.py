@@ -8,7 +8,10 @@ if __name__ == "__main__":
     menu.add_item("Ice Americano", 2600)
     menu.add_item("Ice Latte", 3300)
     menu.add_item("Ice Choco", 3600)
-
+    menu.add_item("Ice Tea", 3500)
+    
     discount = DiscountPolicy()
+    # 할인 정책을 설정합니다.
+    
     order_system = OrderSystem(menu, discount)
     order_system.run()

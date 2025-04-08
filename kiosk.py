@@ -31,7 +31,7 @@ class Menu:
 
     def display_menu(self) -> str:
         """Returns a formatted string for displaying the menu."""
-        menu_str = " | ".join([f"({i + 1}) {item}" for i, item in enumerate(self.items)])
+        menu_str = "\n".join([f"({i + 1}) {item}" for i, item in enumerate(self.items)])
         return f"{menu_str}\n({len(self.items) + 1}) Exit\nEnter the menu number: "
 
 
@@ -80,22 +80,25 @@ class OrderSystem:
 
     def show_summary(self) -> None:
         """Displays the final order summary, including discounts."""
-        print("\nProduct Name\t|\tAmount\t|\tSubtotal")
+        print("\n{:<20} | {:^6} | {:>10}".format("Product Name", "Amount", "Subtotal"))
         print("-" * 50)
-        for item in self.menu:
-            if self.amount[item.name] > 0:
-                subtotal = self.amount[item.name] * item.price
-                print(f"{item.name}\t|\t{self.amount[item.name]}\t|\t{subtotal} won")
 
-        print(f"\nTotal Price: {self.total} won")
+        for item in self.menu:
+            amount = self.amount[item.name]
+            if amount > 0:
+                subtotal = amount * item.price
+                print("{:<20} | {:^6} | {:>10} won".format(item.name, amount, subtotal))
+
+        print("-" * 50)
+        print(f"{'Total Price':<29}: {self.total:>10} won")
         discounted_total = self.discount_policy.apply(self.total)
 
         if discounted_total == self.total:
             print("No discount applied.")
         else:
             print(f"You received a discount!")
-            print(f"Discounted Total:\t{discounted_total} won")
-            print(f"You saved {self.total - discounted_total} won.")
+            print(f"{'Discounted Total':<29}: {discounted_total:>10} won")
+            print(f"{'You saved':<29}: {self.total - discounted_total:>10} won")
 
     def run(self) -> None:
         """Main loop for ordering system."""
