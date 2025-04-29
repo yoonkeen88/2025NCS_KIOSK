@@ -14,4 +14,3 @@ if __name__ == "__main__":
     
     order_system = OrderSystem(menu, discount)
     order_system.run()
-    
