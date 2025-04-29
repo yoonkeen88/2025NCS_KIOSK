@@ -28,3 +28,8 @@ temp.py
 
 *.txt
 *.csv
+*.json
+*.log
+*.cache
+*.db
+*.sqlite
