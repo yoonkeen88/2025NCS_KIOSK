@@ -1,19 +1,20 @@
+# app.py
 import tkinter as tk
 from tkinter import messagebox
+from typing import Any
 from kiosk import Menu, DiscountPolicy, OrderSystem
 
 class KioskApp:
-    def __init__(self, root):
+    def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("Cafe Kiosk")
-        self.root.geometry("480x700")
-        self.root.configure(bg="#f7f2e8")  # 따뜻한 베이지톤 배경
+        self.root.geometry("500x1000")
+        self.root.configure(bg="#f7f2e8")
 
         self.menu = Menu()
         self.discount_policy = DiscountPolicy()
         self.order_system = OrderSystem(self.menu, self.discount_policy)
 
-        # 메뉴 등록
         self.menu.add_item("Americano", 3000)
         self.menu.add_item("Latte", 3500)
         self.menu.add_item("Vanilla Latte", 4000)
@@ -23,7 +24,7 @@ class KioskApp:
 
         self.create_widgets()
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         tk.Label(
             self.root,
             text="☕ Welcome to Cozy Cafe ☕",
@@ -39,7 +40,6 @@ class KioskApp:
         for idx, item in enumerate(items):
             row = idx // 2
             col = idx % 2
-
             btn = tk.Button(
                 self.buttons_frame,
                 text=f"{item.name}\n₩{item.price}",
@@ -54,7 +54,10 @@ class KioskApp:
             )
             btn.grid(row=row, column=col, padx=10, pady=10)
 
-        # 하단 버튼들
+        self.cart_text = tk.Text(self.root, height=15, width=55, font=("Helvetica", 10))
+        self.cart_text.pack(pady=10)
+        self.update_cart()
+
         tk.Button(
             self.root,
             text="✅ Complete Order",
@@ -68,16 +71,6 @@ class KioskApp:
 
         tk.Button(
             self.root,
-            text="🛒 Show Cart",
-            font=("Helvetica", 12),
-            bg="#d9cfc1",
-            fg="black",
-            width=30,
-            command=self.show_cart
-        ).pack(pady=5)
-
-        tk.Button(
-            self.root,
             text="🧼 Reset Order",
             font=("Helvetica", 12),
             bg="#e0b4a3",
@@ -85,32 +78,58 @@ class KioskApp:
             width=30,
             command=self.reset_order
         ).pack(pady=5)
-
-    def add_to_order(self, idx):
+    def add_to_order(self, idx: int) -> None:
         self.order_system.process_order(idx)
-        item = self.menu.get_items()[idx]
-        messagebox.showinfo("Order Added", f"{item.name} has been added to your order.")
+        self.update_cart()  # ✅ 팝업 제거하고 장바구니만 갱신
 
-    def complete_order(self):
+    def complete_order(self) -> None:
+        queue_num = self.order_system.get_queue_number()
+        receipt_filename = f"receipt_{queue_num}.txt"
+        self.order_system.save_receipt(receipt_filename, queue_num)
+
+        receipt_content = self.order_system.get_summary()
+        self.show_receipt_window(receipt_content, queue_num)
+
+    def show_receipt_window(self, content: str, queue_num: int) -> None:
+        receipt_win = tk.Toplevel(self.root)
+        receipt_win.title(f"Receipt - Queue #{queue_num}")
+        receipt_win.geometry("600x600")
+        receipt_win.configure(bg="#fffaf0")
+
+        tk.Label(
+            receipt_win,
+            text=f"🧾 Cozy Cafe Receipt 🧾\nQueue Number: {queue_num}",
+            font=("Helvetica", 16, "bold"),
+            bg="#fffaf0",
+            fg="#4b3832"
+        ).pack(pady=10)
+
+        text_widget = tk.Text(receipt_win, wrap=tk.WORD, font=("Courier", 11), bg="white", fg="black")
+        text_widget.insert(tk.END, content)
+        text_widget.config(state=tk.DISABLED)
+        text_widget.pack(padx=20, pady=10, fill=tk.BOTH, expand=True)
+
+        tk.Button(
+            receipt_win,
+            text="✅ Close and Exit",
+            font=("Helvetica", 12),
+            bg="#6b4226",
+            fg="white",
+            width=25,
+            command=self.root.quit
+        ).pack(pady=10)
+
+    def update_cart(self) -> None:
         summary = self.order_system.get_summary()
-        q_num = self.order_system.get_queue_number()
-        messagebox.showinfo(
-            "Order Complete",
-            f"{summary}\n\n📌 Your Queue Number is: {q_num}\n☕ Thank you for your order!"
-        )
-        self.root.quit()
+        self.cart_text.delete(1.0, tk.END)
+        self.cart_text.insert(tk.END, summary)
 
-    def show_cart(self):
-        summary = self.order_system.get_summary()
-        messagebox.showinfo("🛒 Your Cart", summary)
-
-    def reset_order(self):
-        self.order_system.amount = {item.name: 0 for item in self.menu.get_items()}
-        self.order_system.total = 0
+    def reset_order(self) -> None:
+        self.order_system.reset_order()
+        self.update_cart()
         messagebox.showinfo("Reset Complete", "Your order has been cleared.")
 
 if __name__ == '__main__':
     root = tk.Tk()
     app = KioskApp(root)
     root.mainloop()
-

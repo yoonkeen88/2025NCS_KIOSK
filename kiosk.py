@@ -5,7 +5,6 @@ import sqlite3
 
 logging.basicConfig(level=logging.INFO)
 
-
 class MenuItem:
     def __init__(self, name: str, price: int) -> None:
         self.name = name
@@ -13,7 +12,6 @@ class MenuItem:
 
     def __str__(self) -> str:
         return f"{self.name}: {self.price} won"
-
 
 class Menu:
     def __init__(self) -> None:
@@ -24,7 +22,6 @@ class Menu:
 
     def get_items(self) -> List[MenuItem]:
         return self.items
-
 
 class DiscountPolicy:
     DISCOUNT_THRESHOLD_10 = 10000
@@ -40,7 +37,6 @@ class DiscountPolicy:
             logging.info("5% discount applied")
             return round(total * self.DISCOUNT_RATE_5)
         return total
-
 
 class OrderSystem:
     def __init__(self, menu: Menu, discount_policy: DiscountPolicy) -> None:
@@ -65,7 +61,7 @@ class OrderSystem:
         self.total = 0
 
     def process_order(self, item_index: int) -> None:
-        self.menu = self.menu_obj.get_items()  # ensure menu is up-to-date
+        self.menu = self.menu_obj.get_items()
         item = self.menu[item_index]
         if item.name not in self.amount:
             self.amount[item.name] = 0
@@ -89,13 +85,23 @@ class OrderSystem:
         discounted_total = self.discount_policy.apply(self.total)
 
         if discounted_total != self.total:
-            lines.append(f"You received a discount!")
+            lines.append("You received a discount!")
             lines.append(f"{'Discounted Total':<29}: {discounted_total:>10} won")
             lines.append(f"{'You saved':<29}: {self.total - discounted_total:>10} won")
         else:
             lines.append("No discount applied.")
 
         return "\n".join(lines)
+
+    def save_receipt(self, filename: str, queue_number: int) -> None:  # [수정] 파일로 저장
+        summary = self.get_summary()
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"☕ Cozy Cafe Receipt ☕\n")
+            f.write(f"Queue Number: {queue_number}\n")
+            f.write("="*50 + "\n")
+            f.write(summary + "\n")
+            f.write("="*50 + "\n")
+            f.write("Thank you for visiting Cozy Cafe!\n")
 
     def get_queue_number(self) -> int:
         self.cur.execute("SELECT number FROM queue ORDER BY id DESC LIMIT 1")
