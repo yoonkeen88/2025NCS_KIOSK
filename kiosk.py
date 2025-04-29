@@ -1,12 +1,11 @@
 from typing import List
 import logging
+import sqlite3
 
 logging.basicConfig(level=logging.INFO)
 
 
 class MenuItem:
-    """Represents a single menu item."""
-
     def __init__(self, name: str, price: int) -> None:
         self.name = name
         self.price = price
@@ -16,40 +15,27 @@ class MenuItem:
 
 
 class Menu:
-    """Manages a collection of menu items."""
-
     def __init__(self) -> None:
         self.items: List[MenuItem] = []
 
     def add_item(self, name: str, price: int) -> None:
-        """Adds a new menu item."""
         self.items.append(MenuItem(name, price))
 
     def get_items(self) -> List[MenuItem]:
-        """Returns the list of menu items."""
         return self.items
 
     def display_menu(self) -> str:
-        """Returns a formatted string for displaying the menu."""
         menu_str = "\n".join([f"({i + 1}) {item}" for i, item in enumerate(self.items)])
         return f"{menu_str}\n({len(self.items) + 1}) Exit\nEnter the menu number: "
 
 
 class DiscountPolicy:
-    """Handles discount logic as a separate component."""
-
     DISCOUNT_THRESHOLD_10 = 10000
     DISCOUNT_THRESHOLD_5 = 5000
     DISCOUNT_RATE_10 = 0.9
     DISCOUNT_RATE_5 = 0.95
 
     def apply(self, total: int) -> int:
-        """
-        Applies discount based on the total price.
-
-        :param total: original total price
-        :return: discounted price
-        """
         if total >= self.DISCOUNT_THRESHOLD_10:
             logging.info("10% discount applied")
             return round(total * self.DISCOUNT_RATE_10)
@@ -60,43 +46,48 @@ class DiscountPolicy:
 
 
 class OrderSystem:
-    """Handles order processing and uses a discount policy."""
-
     def __init__(self, menu: Menu, discount_policy: DiscountPolicy) -> None:
-        self.menu_obj = menu  # Aggregation
+        self.menu_obj = menu
         self.menu = menu.get_items()
-        self.discount_policy = discount_policy  # Uses-a 관계
+        self.discount_policy = discount_policy
         self.amount = {item.name: 0 for item in self.menu}
         self.total = 0
 
+        # SQLite 연결 및 테이블 생성
+        self.conn = sqlite3.connect("queue_number.db")
+        self.cur = self.conn.cursor()
+        self.cur.execute('''
+            CREATE TABLE IF NOT EXISTS queue (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                number INTEGER NOT NULL
+            )
+        ''')
+        self.conn.commit()
+
     def process_order(self, item_index: int) -> None:
-        """Processes an order for the selected menu item."""
         item = self.menu[item_index]
         self.amount[item.name] += 1
         self.total += item.price
         logging.info(f"{item} ordered. Total so far: {self.total} won")
         print(f"{item} ordered.")
         print(f"Total: {self.total} won\n{'-' * 50}")
-    
-    def get_Queue_number(self) -> int:
-        """Returns the current queue number."""
-        try:
-            with open("queue_number.txt", "r") as file:
-                queue_number = int(file.read().strip())
-        except (FileNotFoundError, ValueError):
-            queue_number = 0  # 파일이 없거나 비어 있으면 0부터 시작
 
-        queue_number += 1  # 실제 증가
+    def get_queue_number(self) -> int:
+        self.cur.execute("SELECT number FROM queue ORDER BY id DESC LIMIT 1")
+        result = self.cur.fetchone()
 
-        with open("queue_number.txt", "w") as file:
-            file.write(str(queue_number))
+        if result is None:
+            number = 1
+            self.cur.execute("INSERT INTO queue (number) VALUES (?)", (number,))
+        else:
+            number = result[0] + 1
+            self.cur.execute("INSERT INTO queue (number) VALUES (?)", (number,))
 
-        print(f"\n✨ Your Queue Number is: {queue_number} ✨\nPlease wait while we prepare your order.")
-        return queue_number
+        self.conn.commit()
+        print(f"\n✨ Your Queue Number is: {number} ✨\nPlease wait while we prepare your order.")
+        return number
 
-    
     def show_summary(self) -> None:
-        """Displays the final order summary, including discounts."""
         print("\n{:<20} | {:^6} | {:>10}".format("Product Name", "Amount", "Subtotal"))
         print("-" * 50)
 
@@ -118,7 +109,6 @@ class OrderSystem:
             print(f"{'You saved':<29}: {self.total - discounted_total:>10} won")
 
     def run(self) -> None:
-        """Main loop for ordering system."""
         while True:
             try:
                 order_input = input(self.menu_obj.display_menu()).strip()
@@ -131,6 +121,9 @@ class OrderSystem:
                     print("Invalid selection. Please choose again.")
             except ValueError:
                 print("Invalid input. Please enter a number.")
-        self.show_summary()
-        self.get_Queue_number()
 
+        self.show_summary()
+        self.get_queue_number()
+
+    def __del__(self):
+        self.conn.close()
