@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 from typing import Any
 from kiosk import Menu, DiscountPolicy, OrderSystem
-
+from datetime import datetime
 class KioskApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root

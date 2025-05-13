@@ -2,7 +2,7 @@
 from typing import List
 import logging
 import sqlite3
-
+from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 
 class MenuItem:
@@ -88,6 +88,7 @@ class OrderSystem:
             lines.append("You received a discount!")
             lines.append(f"{'Discounted Total':<29}: {discounted_total:>10} won")
             lines.append(f"{'You saved':<29}: {self.total - discounted_total:>10} won")
+            lines.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         else:
             lines.append("No discount applied.")
 
