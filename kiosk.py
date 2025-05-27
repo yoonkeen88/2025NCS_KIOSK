@@ -2,12 +2,16 @@
 from typing import List
 import logging
 import sqlite3
+import requests
+
 from datetime import datetime
 logging.basicConfig(level=logging.INFO)
-
+import threading
+import time
 import tkinter as tk
 from tkinter import messagebox
 from typing import Any
+from typing import Callable
 
 class MenuItem:
     def __init__(self, name: str, price: int) -> None:
@@ -60,10 +64,12 @@ class OrderSystem:
 
         self.reset_order()
 
+
     def reset_order(self) -> None:
         self.menu = self.menu_obj.get_items()
         self.amount = {item.name: 0 for item in self.menu}
         self.total = 0
+
 
     def process_order(self, item_index: int) -> None:
         self.menu = self.menu_obj.get_items()
@@ -73,6 +79,7 @@ class OrderSystem:
         self.amount[item.name] += 1
         self.total += item.price
         logging.info(f"{item} ordered. Total so far: {self.total} won")
+
 
     def get_summary(self) -> str:
         lines = []
@@ -99,6 +106,7 @@ class OrderSystem:
 
         return "\n".join(lines)
 
+
     def save_receipt(self, filename: str, queue_number: int) -> None:  # [수정] 파일로 저장
         summary = self.get_summary()
         with open(filename, "w", encoding="utf-8") as f:
@@ -108,6 +116,7 @@ class OrderSystem:
             f.write(summary + "\n")
             f.write("="*50 + "\n")
             f.write("Thank you for visiting Cozy Cafe!\n")
+
 
     def get_queue_number(self) -> int:
         self.cur.execute("SELECT number FROM queue ORDER BY id DESC LIMIT 1")
@@ -122,9 +131,66 @@ class OrderSystem:
         self.conn.commit()
         return number
 
+
     def __del__(self):
         self.conn.close()
 
+import threading
+import time
+import requests
+import logging
+from typing import Callable
+import tkinter as tk
+from tkinter import messagebox
+
+logging.basicConfig(level=logging.INFO)
+
+class WeatherManager:
+    def __init__(self, update_callback: Callable[[str], None] = None) -> None:
+        self.weather_info = "Loading weather..."
+        self.update_callback = update_callback
+        self.stop_flag = False
+        self.update_interval = 300
+        self.last_fetched_info = ""
+        self.thread = threading.Thread(target=self._auto_update_loop, daemon=True)
+
+    def start_auto_update(self) -> None:
+        if not self.thread.is_alive():
+            self.thread.start()
+
+    def stop_auto_update(self) -> None:
+        self.stop_flag = True
+
+    def _auto_update_loop(self) -> None:
+        while not self.stop_flag:
+            self.update_weather()
+            time.sleep(self.update_interval)
+
+    def update_weather(self) -> str:
+        try:
+            url = "https://wttr.in/Incheon?format=3"
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                new_info = response.text.strip()
+                if new_info != self.last_fetched_info:
+                    self.weather_info = new_info
+                    self.last_fetched_info = new_info
+                    logging.info(f"Weather info updated: {self.weather_info}")
+                    self._safe_ui_update(self.weather_info)
+            else:
+                logging.warning("Failed to get weather info: Status code not 200")
+                self._safe_ui_update("Weather info not available")
+        except requests.RequestException as e:
+            logging.error(f"Exception while fetching weather: {e}")
+            self._safe_ui_update("Failed to load weather")
+        return self.weather_info
+
+    def _safe_ui_update(self, text: str) -> None:
+        try:
+            if self.update_callback:
+                self.update_callback(text)
+        except Exception as e:
+            logging.error(f"Error updating UI: {e}")
 
 class KioskApp:
     def __init__(self, root: tk.Tk) -> None:
@@ -132,7 +198,7 @@ class KioskApp:
         self.root.title("Cafe Kiosk")
         self.root.geometry("500x1000")
         self.root.configure(bg="#f7f2e8")
-        
+
         self.menu = Menu()
         self.discount_policy = DiscountPolicy()
         self.order_system = OrderSystem(self.menu, self.discount_policy)
@@ -144,7 +210,22 @@ class KioskApp:
         self.menu.add_item("Mocha", 4200)
         self.menu.add_item("Cappuccino", 3700)
 
+        self.weather_manager = WeatherManager(update_callback=self.set_weather_text)
+        self.weather_manager.start_auto_update()
+
         self.create_widgets()
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def set_weather_text(self, new_weather: str) -> None:
+        if hasattr(self, 'weather_label'):
+            self.weather_label.config(text=new_weather)
+
+    def update_weather_once(self) -> None:
+        self.weather_manager.update_weather()
+
+    def on_close(self) -> None:
+        self.weather_manager.stop_auto_update()
+        self.root.destroy()
 
     def create_widgets(self) -> None:
         tk.Label(
@@ -176,7 +257,6 @@ class KioskApp:
             )
             btn.grid(row=row, column=col, padx=10, pady=10)
 
-        # 메뉴 버튼 아래에 날씨 라벨과 버튼 추가
         self.weather_label = tk.Label(
             self.buttons_frame,
             text="🌡️ Loading Weather Information...",
@@ -195,7 +275,7 @@ class KioskApp:
             bg="#6b4226",
             fg="#87CEEB",
             width=20,
-            command=self.update_weather
+            command=self.update_weather_once
         )
         self.weather_button.grid(row=((len(items)+1)//2)+1, column=0, columnspan=2, pady=(0, 20))
 
@@ -226,14 +306,13 @@ class KioskApp:
 
     def add_to_order(self, idx: int) -> None:
         self.order_system.process_order(idx)
-        self.update_cart()  # ✅ 팝업 제거하고 장바구니만 갱신
-        self.update_weather() # 날씨 정보 업데이트 추가 주문시
+        self.update_cart()
+        self.update_weather_once()
 
     def complete_order(self) -> None:
         queue_num = self.order_system.get_queue_number()
         receipt_filename = f"receipt_{queue_num}.txt"
         self.order_system.save_receipt(receipt_filename, queue_num)
-
         receipt_content = self.order_system.get_summary()
         self.show_receipt_window(receipt_content, queue_num)
 
@@ -275,20 +354,3 @@ class KioskApp:
         self.order_system.reset_order()
         self.update_cart()
         messagebox.showinfo("Reset Complete", "Your order has been cleared.")
-    
-
-    def update_weather(self) -> None:
-        import requests
-        try:
-            url = "https://wttr.in/Incheon?format=3"  # 간략한 날씨 요약
-            response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                weather_info = response.text.strip()
-                self.weather_label.config(text=weather_info)
-                logging.info(f"Weather info updated: {weather_info}")
-            else:
-                self.weather_label.config(text="Weather info not available")
-                logging.warning("Failed to get weather info: Status code not 200")
-        except requests.RequestException as e:
-            self.weather_label.config(text="Failed to load weather")
-            logging.error(f"Exception while fetching weather: {e}")
